@@ -20,6 +20,8 @@ export const initSocket = (io) => {
       activeSockets.set(socket.id, session._id);
       socket.data.sessionId = session._id;
 
+      await User.findByIdAndUpdate(userId, { hasWatched: true });
+
       emitLiveCount();
     });
 

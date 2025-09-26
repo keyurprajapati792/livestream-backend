@@ -8,8 +8,7 @@ export const getAnalytics = async (req, res) => {
     const totalQuestions = await Question.countDocuments();
 
     const sessions = await WatchSession.find({ duration: { $gt: 0 } });
-    const totalAttendees = new Set(sessions.map((s) => s.userId.toString()))
-      .size;
+    const totalAttendees = await User.countDocuments({ hasWatched: true });
     const notShows = totalRegistrations - totalAttendees;
 
     // Average view calculation
