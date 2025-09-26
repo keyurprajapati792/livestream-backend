@@ -1,3 +1,4 @@
+import User from "./models/User.js";
 import WatchSession from "./models/WatchSession.js";
 
 export const initSocket = (io) => {
