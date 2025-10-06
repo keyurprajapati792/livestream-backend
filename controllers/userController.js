@@ -6,9 +6,9 @@ export const registerUser = async (req, res) => {
     const { name, contact, email, city, institution, profession } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists)
-      return res
-        .status(400)
-        .json({ message: "User already exists, Please try with different email" });
+      return res.status(400).json({
+        message: "User already exists, Please try with different email",
+      });
 
     const user = await User.create({
       name,
@@ -75,7 +75,32 @@ export const loginUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
+    const users = await User.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $lookup: {
+          from: "watchsessions",
+          let: { userId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$userId", "$$userId"] } } },
+            { $sort: { joinTime: -1 } }, // get latest session first
+            { $limit: 1 }, // only include one (latest)
+          ],
+          as: "watchSessions",
+        },
+      },
+      {
+        $addFields: {
+          watchSession: { $arrayElemAt: ["$watchSessions", 0] },
+        },
+      },
+      {
+        $project: {
+          watchSessions: 0, // remove array
+        },
+      },
+    ]);
+
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: error.message });
